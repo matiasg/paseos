@@ -79,7 +79,7 @@ open class GraphsWithRestraints(
     }
 
     fun changeAim() {
-        val aims: Array<Pair<Double, Double>> = Array(theGraphs.size, { id -> Pair(0.0, 0.0) })
+        val aims: Array<Pair<Double, Double>> = Array(theGraphs.size, { Pair(0.0, 0.0) })
         val poses: Array<Pair<Double, Double>> = Array(theGraphs.size, { id -> Pair(theGraphs[id]!!.pos.first.toDouble(), theGraphs[id]!!.pos.second.toDouble()) })
 
         for (edge in graphsToGraphs) {
