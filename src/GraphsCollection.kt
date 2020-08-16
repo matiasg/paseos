@@ -5,7 +5,7 @@ import kotlin.math.pow
 
 interface GraphsCollection {
     fun step()
-    fun update()
+    fun update(t: Double)
     fun getGraphs(): Map<Int, ForgetfulGraphInR2>
     fun getColors(): Map<Int, Pair<Array<Int>, Array<Int>>>
 }
@@ -14,8 +14,10 @@ class Edge(val node1: Int, val node2: Int, val k: Double)
 
 
 open class GraphsWithRestraintsAndChangingG() : GraphsWithRestraints() {
-    override fun setG() {
-        G = fixedG * (Math.sin(2 * Math.PI * steps / period.toDouble()) + 0.8)
+    val Gperiods = 2.0
+
+    override fun updateG(t: Double) {
+        G = fixedG * (Math.sin(2 * Math.PI * t * Gperiods) + 0.8)
     }
 
 }
@@ -29,13 +31,10 @@ open class GraphsWithRestraints(
     val graphsToPoints: MutableList<Edge> = mutableListOf()
     val theColors: MutableMap<Int, Pair<Array<Int>, Array<Int>>> = mutableMapOf()
 
-    var steps: Int = 1
-    val minDist: Double = 6.0
     // TODO: reify this
     val fixedG: Double = 2e2
     var G: Double = fixedG
-    val period: Int = 1_200_000
-
+    val minDist: Double = 6.0
 
     fun addGraph(graph: ForgetfulGraphInR2, col1: Array<Int>, col2: Array<Int>): Int {
         val id = theGraphs.size
@@ -65,9 +64,9 @@ open class GraphsWithRestraints(
         return Pair(G * factor * diff.first / dist3, G * factor * diff.second / dist3)
     }
 
-    override fun update() {
+    override fun update(t: Double) {
         changeAim()
-        setG()
+        updateG(t)
     }
 
     override fun getGraphs(): Map<Int, ForgetfulGraphInR2> {
@@ -98,8 +97,7 @@ open class GraphsWithRestraints(
         }
     }
 
-
-    open fun setG() {}
+    open fun updateG(t: Double) {}
 
     override fun step() {
         for (g in theGraphs.values) {
@@ -108,7 +106,6 @@ open class GraphsWithRestraints(
         for (p in movingPoints.values) {
             p.move()
         }
-        steps++
     }
 
 }
@@ -116,6 +113,7 @@ open class GraphsWithRestraints(
 class SuperGraphsCollection(
     val size: Int,
     val label: String,
+    val totalSteps: Int,
     val stepsForPics: Int,
     val stepsForaAimChange: Int
 ) {
@@ -144,10 +142,11 @@ class SuperGraphsCollection(
         for (collection in graphsCollections) {
             collection.step()
         }
+        steps++
 
         val timeForPicture = steps % stepsForPics == 0
         if (timeForPicture) {
-            val pic = steps / stepsForPics
+            val pic = steps / stepsForPics - 1
             println("going for pic $pic")
             pngFile(pic).outputStream().use {
                 dumpPng(graphsCollections, size, it)
@@ -157,10 +156,9 @@ class SuperGraphsCollection(
         val timeForAimChange = steps % stepsForaAimChange == 0
         if (timeForAimChange) {
             for (collection in graphsCollections) {
-                collection.update()
+                collection.update(steps.toDouble() / totalSteps)
             }
         }
-        steps++
     }
 
 }

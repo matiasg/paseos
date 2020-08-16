@@ -1,5 +1,3 @@
-import java.io.File
-
 class Phantom(
     size: Int,
     val center: (t: Double) -> Pair<Double, Double>,
@@ -7,16 +5,17 @@ class Phantom(
     color: Array<Int>
 ): GraphsWithRestraints() {
     init {
+        val start = Pair(center(0.0).first.toInt(), center(0.0).second.toInt())
         val body = addGraph(
-            ForgetfulGraphInR2(size, 24_000, OneOrA(1.5)),
+            ForgetfulGraphInR2(size, 24_000, OneOrA(1.5), start),
             arrayOf(color[0] / 30, color[1] / 30, color[2] / 40), color
         )
         val eye1 = addGraph(
-            ForgetfulGraphInR2(size, 6_000, OneOrA(4.5)),
+            ForgetfulGraphInR2(size, 6_000, OneOrA(4.5), start),
             color, toColor("ffffff")
         )
         val eye2 = addGraph(
-            ForgetfulGraphInR2(size, 6_000, OneOrA(4.5)),
+            ForgetfulGraphInR2(size, 6_000, OneOrA(4.5), start),
             color, toColor("ffffff")
         )
 

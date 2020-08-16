@@ -5,9 +5,13 @@ import kotlin.math.absoluteValue
 import kotlin.math.pow
 import kotlin.random.Random.Default.nextDouble
 
-open class GraphInR2(val size: Int, open val strategy: Strategy, startInTheMiddle: Boolean = false) {
+open class GraphInR2(
+    val size: Int,
+    open val strategy: Strategy,
+    startAt: Pair<Int, Int>? = null
+) {
     val graph = Array(size, { Array(size, { IntArray(5) }) })
-    var pos: Pair<Int, Int> = if (startInTheMiddle) Pair(size / 2, size / 2) else Pair((0..size - 1).random(), (0..size - 1).random())
+    var pos: Pair<Int, Int> = startAt ?: Pair((0..size - 1).random(), (0..size - 1).random())
     var totalMass: Int = 0
     var center: Pair<Double, Double> = Pair(pos.first.toDouble(), pos.second.toDouble())
 

@@ -5,8 +5,8 @@ class ForgetfulGraphInR2(
     size: Int,
     val memory: Int,
     override val strategy: StragegyWithAim,
-    startInTheMiddle: Boolean = false
-) : GraphInR2(size, strategy, startInTheMiddle) {
+    startAt: Pair<Int, Int>? = null
+) : GraphInR2(size, strategy, startAt) {
     val path = ArrayList<Pair<Int, Int>>(memory)
     var memStart: Int = 0
 

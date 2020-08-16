@@ -5,8 +5,7 @@ internal class GraphInR2Test {
 
     @org.junit.jupiter.api.Test
     fun getEdge() {
-        val g = GraphInR2(10, NoHistory(), startInTheMiddle = true)
-        assertEquals(g.pos, Pair(5, 5))
+        val g = GraphInR2(10, NoHistory(), Pair(5, 5))
         g.graph[5][5][1] = 3
         assertEquals(3, g.getEdge(5, 5, 1))
         assertEquals(3, g.getEdge(Pair(5, 5), 1))
@@ -37,7 +36,7 @@ internal class GraphInR2Test {
 
     @Test
     fun testAddForget() {
-        val g = ForgetfulGraphInR2(10, 5, NoHistory(), startInTheMiddle = false)
+        val g = ForgetfulGraphInR2(10, 5, NoHistory(), Pair(5, 5))
         g.move()
         assertEquals(1, g.path.size)
         assertEquals(1, sumOfNodes(g))
@@ -60,7 +59,7 @@ internal class GraphInR2Test {
 
     @Test
     fun testCenter() {
-        val g = ForgetfulGraphInR2(10, 5, NoHistory(), startInTheMiddle = true)
+        val g = ForgetfulGraphInR2(10, 5, NoHistory(), Pair(5, 5))
         assertEquals(Pair(5.0, 5.0), g.center)
         g.add(Pair(5, 5), Pair(5, 6))
         assertEquals(Pair(5.0, 6.0), g.center)
