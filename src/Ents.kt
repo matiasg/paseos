@@ -1,11 +1,10 @@
 class Phantom(
     size: Int,
-    val center: (t: Double) -> Pair<Double, Double>,
-    totalSteps: Int,
+    val center: MovingPoint,
     color: Array<Int>
 ): GraphsWithRestraints() {
     init {
-        val start = Pair(center(0.0).first.toInt(), center(0.0).second.toInt())
+        val start = Pair(center.trajectory.pos(0.0).first.toInt(), center.trajectory.pos(0.0).second.toInt())
         val body = addGraph(
             ForgetfulGraphInR2(size, 24_000, OneOrA(1.5), start),
             arrayOf(color[0] / 30, color[1] / 30, color[2] / 40), color
@@ -19,9 +18,9 @@ class Phantom(
             color, toColor("ffffff")
         )
 
-        val bodyPoint = addMovingPoint(FunctionMovingPoint({t -> center(t)}, totalSteps, 2.0))
-        val eye1Point = addMovingPoint(FunctionMovingPoint({t -> Pair(center(t).first - 10.0, center(t).second - 8.0)}, totalSteps, 12.0))
-        val eye2Point = addMovingPoint(FunctionMovingPoint({t -> Pair(center(t).first - 10.0, center(t).second + 8.0)}, totalSteps, 12.0))
+        val bodyPoint = addMovingPoint(center)
+        val eye1Point = addMovingPoint(MovingPoint(6 * center.mass, DisplacedMovingPoint(center.trajectory, -10.0, -8.0)))
+        val eye2Point = addMovingPoint(MovingPoint(6 * center.mass, DisplacedMovingPoint(center.trajectory, -10.0, 8.0)))
 
         addEdgeGtoP(body, bodyPoint, -1.5)
         addEdgeGtoP(eye1, eye1Point, -1.5)

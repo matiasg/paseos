@@ -65,7 +65,7 @@ open class GraphsWithRestraints(
     }
 
     override fun update(t: Double) {
-        changeAim()
+        changeAim(t)
         updateG(t)
     }
 
@@ -77,7 +77,7 @@ open class GraphsWithRestraints(
         return theColors
     }
 
-    fun changeAim() {
+    fun changeAim(t: Double) {
         val aims: Array<Pair<Double, Double>> = Array(theGraphs.size, { Pair(0.0, 0.0) })
         val poses: Array<Pair<Double, Double>> = Array(theGraphs.size, { id -> Pair(theGraphs[id]!!.pos.first.toDouble(), theGraphs[id]!!.pos.second.toDouble()) })
 
@@ -88,7 +88,7 @@ open class GraphsWithRestraints(
 
         for (edge in graphsToPoints) {
             val point = movingPoints[edge.node2]!!
-            val edgeAim = getDirection(poses[edge.node1], point.getPos(), edge.k * point.mass)
+            val edgeAim = getDirection(poses[edge.node1], point.trajectory.pos(t), edge.k * point.mass)
             aims[edge.node1] = Pair(aims[edge.node1].first + edgeAim.first , aims[edge.node1].second + edgeAim.second)
         }
 
@@ -102,9 +102,6 @@ open class GraphsWithRestraints(
     override fun step() {
         for (g in theGraphs.values) {
             g.move()
-        }
-        for (p in movingPoints.values) {
-            p.move()
         }
     }
 
