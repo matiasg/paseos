@@ -2,7 +2,7 @@ class Phantom(
     size: Int,
     val center: MovingPoint,
     color: Array<Int>
-): GraphsWithRestraints() {
+): JointGraphsWithRestraints() {
     init {
         val start = Pair(center.trajectory.pos(0.0).first.toInt(), center.trajectory.pos(0.0).second.toInt())
         val body = addGraph(

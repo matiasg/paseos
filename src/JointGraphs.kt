@@ -3,7 +3,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 
-interface GraphsCollection {
+interface JointGraphs {
     fun step()
     fun update(t: Double)
     fun getGraphs(): Map<Int, ForgetfulGraphInR2>
@@ -13,7 +13,7 @@ interface GraphsCollection {
 class Edge(val node1: Int, val node2: Int, val k: Double)
 
 
-open class GraphsWithRestraintsAndChangingG() : GraphsWithRestraints() {
+open class JointGraphsWithRestraintsAndChangingG() : JointGraphsWithRestraints() {
     val Gperiods = 2.0
 
     override fun updateG(t: Double) {
@@ -22,8 +22,8 @@ open class GraphsWithRestraintsAndChangingG() : GraphsWithRestraints() {
 
 }
 
-open class GraphsWithRestraints(
-) : GraphsCollection {
+open class JointGraphsWithRestraints(
+) : JointGraphs {
 
     val theGraphs = mutableMapOf<Int, ForgetfulGraphInR2>()
     val movingPoints: MutableMap<Int, MovingPoint> = mutableMapOf()
@@ -107,21 +107,21 @@ open class GraphsWithRestraints(
 
 }
 
-class SuperGraphsCollection(
+class DisjointJointGraphs(
     val size: Int,
     val label: String,
     val totalSteps: Int,
     val stepsForPics: Int,
     val stepsForaAimChange: Int
 ) {
-    val graphsCollections = mutableListOf<GraphsCollection>()
+    val graphsCollections = mutableListOf<JointGraphs>()
     var steps = 0
 
     init {
         directory().mkdir()
     }
 
-    fun addCollection(c: GraphsCollection) {
+    fun addCollection(c: JointGraphs) {
         graphsCollections.add((c))
     }
 
