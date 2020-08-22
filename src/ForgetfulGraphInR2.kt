@@ -30,4 +30,3 @@ class ForgetfulGraphInR2(
         pos = newPos
     }
 }
-
