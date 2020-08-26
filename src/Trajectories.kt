@@ -1,5 +1,6 @@
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
 
 class MovingPoint(val mass: Double, val trajectory: Trajectory)
@@ -57,7 +58,7 @@ class Polygonal(
 ) : Trajectory {
     override fun pos(t: Double): Pair<Double, Double> {
         if (t == 1.0) return timePoints.last().p
-        val idx = ((0..timePoints.size-1) zip timePoints).filter { it.second.t > t }.minBy { it.second.t }!!.first
+        val idx = ((0..timePoints.size - 1) zip timePoints).filter { it.second.t > t }.minBy { it.second.t }!!.first
         val t0 = timePoints[idx - 1].t
         val t1 = if (idx < timePoints.size) timePoints.get(idx).t else 2.0
         val dt = t1 - t0
@@ -67,7 +68,7 @@ class Polygonal(
     }
 }
 
-class DisplacedMovingPoint(
+class DisplacedTrajectory(
     val mp: Trajectory,
     val deltaX: Double,
     val deltaY: Double
@@ -96,9 +97,51 @@ class Composition(
     val subTrajectories: List<Trajectory>
 ) : Trajectory {
     override fun pos(t: Double): Pair<Double, Double> {
-        val idx = ((0..changes.size-1) zip changes).filter { it.second > t }.minBy { it.second }?.first ?: changes.size
+        val idx =
+            ((0..changes.size - 1) zip changes).filter { it.second > t }.minBy { it.second }?.first ?: changes.size
         val t0 = if (idx > 0) changes[idx - 1] else 0.0
         val t1 = if (idx < changes.size) changes[idx] else 1.0
         return subTrajectories[idx].pos((t - t0) / (t1 - t0))
     }
+}
+
+
+class Repetition(
+    val original: Trajectory,
+    val repetitions: Int
+) : Trajectory {
+    override fun pos(t: Double): Pair<Double, Double> {
+        return original.pos((t * repetitions) % 1)
+    }
+}
+
+
+class Quadratic(
+    p0: Pair<Double, Double>,
+    p1: Pair<Double, Double>,
+    p2: Pair<Double, Double>
+) : Trajectory {
+    val ax = 2 * p0.first - 4 * p1.first + 2 * p2.first
+    val ay = 2 * p0.second - 4 * p1.second + 2 * p2.second
+    val bx = -3 * p0.first + 4 * p1.first - p2.first
+    val by = -3 * p0.second + 4 * p1.second - p2.second
+    val cx = p0.first
+    val cy = p0.second
+
+    override fun pos(t: Double): Pair<Double, Double> {
+        return Pair(ax * t.pow(2) + bx * t + cx, ay * t.pow(2) + by * t + cy)
+    }
+
+}
+
+
+class ClosedPolygon(
+    val points: List<Pair<Double, Double>>,
+    val rounds: Double
+) : Trajectory {
+    override fun pos(t: Double): Pair<Double, Double> {
+        val idx = (t * rounds * points.size).toInt() % points.size
+        return points[idx]
+    }
+
 }

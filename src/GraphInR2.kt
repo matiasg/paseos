@@ -7,7 +7,7 @@ import kotlin.random.Random.Default.nextDouble
 
 open class GraphInR2(
     val size: Int,
-    open val strategy: Strategy,
+    open var strategy: StrategyWithAim,
     startAt: Pair<Int, Int>? = null
 ) {
     val graph = Array(size, { Array(size, { IntArray(5) }) })

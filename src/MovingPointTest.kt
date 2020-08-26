@@ -34,4 +34,12 @@ internal class MovingPointTest {
         assertEquals(Pair(1.0, 1.0), c.pos(0.875))
         assertEquals(Pair(0.0, 0.0), c.pos(1.0))
     }
+
+    @Test
+    fun testQuadratic() {
+        val q = Quadratic(Pair(0.0, 0.0), Pair(2.0, 1.0), Pair(4.0, 8.0))
+        assertEquals(Pair(0.0, 0.0), q.pos(0.0))
+        assertEquals(Pair(2.0, 1.0), q.pos(0.5))
+        assertEquals(Pair(4.0, 8.0), q.pos(1.0))
+    }
 }

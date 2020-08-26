@@ -57,6 +57,10 @@ open class JointGraphsWithRestraints(
         graphsToPoints.add(Edge(idg, idp, k))
     }
 
+    fun changeStrategy(graphId: Int, newStrategy: StrategyWithAim) {
+        theGraphs[graphId]?.strategy = newStrategy
+    }
+
     private  fun getDirection(ownPos: Pair<Double, Double>, otherCenter: Pair<Double, Double>, factor: Double): Pair<Double, Double> {
         val diff = Pair<Double, Double>(ownPos.first - otherCenter.first, ownPos.second - otherCenter.second)
         val dist3 =
@@ -79,16 +83,16 @@ open class JointGraphsWithRestraints(
 
     fun changeAim(t: Double) {
         val aims: Array<Pair<Double, Double>> = Array(theGraphs.size, { Pair(0.0, 0.0) })
-        val poses: Array<Pair<Double, Double>> = Array(theGraphs.size, { id -> Pair(theGraphs[id]!!.pos.first.toDouble(), theGraphs[id]!!.pos.second.toDouble()) })
+        val positions: Array<Pair<Double, Double>> = Array(theGraphs.size, { id -> Pair(theGraphs[id]!!.pos.first.toDouble(), theGraphs[id]!!.pos.second.toDouble()) })
 
         for (edge in graphsToGraphs) {
-            val edgeAim = getDirection(poses[edge.node1], poses[edge.node2], edge.k)
+            val edgeAim = getDirection(positions[edge.node1], positions[edge.node2], edge.k)
             aims[edge.node1] = Pair(aims[edge.node1].first + edgeAim.first , aims[edge.node1].second + edgeAim.second)
         }
 
         for (edge in graphsToPoints) {
             val point = movingPoints[edge.node2]!!
-            val edgeAim = getDirection(poses[edge.node1], point.trajectory.pos(t), edge.k * point.mass)
+            val edgeAim = getDirection(positions[edge.node1], point.trajectory.pos(t), edge.k * point.mass)
             aims[edge.node1] = Pair(aims[edge.node1].first + edgeAim.first , aims[edge.node1].second + edgeAim.second)
         }
 
@@ -116,6 +120,7 @@ class DisjointJointGraphs(
 ) {
     val graphsCollections = mutableListOf<JointGraphs>()
     var steps = 0
+    val changes = mutableListOf<GraphChange>()
 
     init {
         directory().mkdir()
@@ -125,13 +130,17 @@ class DisjointJointGraphs(
         graphsCollections.add((c))
     }
 
+    fun addChange(ch: GraphChange) {
+        changes.add(ch)
+    }
+
     fun directory(): File {
         val name = "graphs.$size.$label"
         return File(name)
     }
 
     fun pngFile(pic: Int): File {
-        val name = "graph.$size.$label.%03d.png".format(pic)
+        val name = "graph.$size.$label.%04d.png".format(pic)
         return File(directory(), name)
     }
 
@@ -144,8 +153,9 @@ class DisjointJointGraphs(
         val timeForPicture = steps % stepsForPics == 0
         if (timeForPicture) {
             val pic = steps / stepsForPics - 1
-            println("going for pic $pic")
-            pngFile(pic).outputStream().use {
+            val pngFile = pngFile(pic)
+            println("going for pic $pngFile")
+            pngFile.outputStream().use {
                 dumpPng(graphsCollections, size, it)
             }
         }
@@ -156,6 +166,25 @@ class DisjointJointGraphs(
                 collection.update(steps.toDouble() / totalSteps)
             }
         }
+
+        for (ch in changes) {
+            ch.doChange(steps)
+        }
     }
 
+}
+
+class GraphChange(
+    time: Double,
+    val totalSteps: Int,
+    val graph: GraphInR2,
+    val change: (GraphInR2) -> Unit
+) {
+    val stepToChange = (time * totalSteps).toInt()
+
+    fun doChange(step: Int) {
+        if (step == stepToChange) {
+            change(graph)
+        }
+    }
 }

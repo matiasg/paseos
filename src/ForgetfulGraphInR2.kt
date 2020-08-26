@@ -1,17 +1,11 @@
-import java.awt.geom.Path2D
-import java.sql.Time
-import kotlin.math.cos
-import kotlin.math.sin
-
 class ForgetfulGraphInR2(
     size: Int,
     val memory: Int,
-    override val strategy: StragegyWithAim,
+    override var strategy: StrategyWithAim,
     startAt: Pair<Int, Int>? = null
 ) : GraphInR2(size, strategy, startAt) {
     val path = ArrayList<Pair<Int, Int>>(memory)
     var memStart: Int = 0
-
 
     override fun move() {
         val dir = randomDir()
