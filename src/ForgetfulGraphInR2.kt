@@ -1,6 +1,6 @@
 class ForgetfulGraphInR2(
     size: Int,
-    val memory: Int,
+    var memory: Int,
     override var strategy: StrategyWithAim,
     startAt: Pair<Int, Int>? = null
 ) : GraphInR2(size, strategy, startAt) {

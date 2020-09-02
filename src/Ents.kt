@@ -1,19 +1,22 @@
 import kotlin.math.*
 
+fun getStart(center: MovingPoint) = Pair(center.trajectory.pos(0.0).first.toInt(), center.trajectory.pos(0.0).second.toInt())
+
 class Phantom(
     size: Int,
-    val center: MovingPoint,
+    center: MovingPoint,
     color: Array<Int>,
-    oblongNess: Pair<Double, Double>? = null
-) : JointGraphsWithRestraints() {
+    oblongNess: Pair<Double, Double>? = null,
+    memory: Int = 24_000
+) : Actoress() {
     val body: Int
 
     init {
-        val start = Pair(center.trajectory.pos(0.0).first.toInt(), center.trajectory.pos(0.0).second.toInt())
+        val start = getStart(center)
         body = addGraph(
             ForgetfulGraphInR2(
                 size,
-                24_000,
+                memory,
                 if (oblongNess == null) OneOrA(1.5) else Oblong(1.5, oblongNess.first, oblongNess.second),
                 start
             ), arrayOf(color[0] / 30, color[1] / 30, color[2] / 40), color
@@ -33,26 +36,63 @@ class Phantom(
         val eye2Point =
             addMovingPoint(MovingPoint(6 * center.mass, DisplacedTrajectory(center.trajectory, -10.0, 8.0)))
 
-        addEdgeGtoP(body, bodyPoint, -1.5)
-        addEdgeGtoP(eye1, eye1Point, -1.5)
-        addEdgeGtoP(eye2, eye2Point, -1.5)
+        addEdgeAtoP(body, bodyPoint, -1.5)
+        addEdgeAtoP(eye1, eye1Point, -1.5)
+        addEdgeAtoP(eye2, eye2Point, -1.5)
     }
 
-    fun getBody(): GraphInR2 {
-        return theGraphs[body]!!
+    private fun getBody(): GraphInR2 {
+        return theActors[body]!!
+    }
+
+    fun changeOblongness (newObx: Double, newOby: Double) {
+        getBody().strategy = Oblong(1.5, newObx, newOby)
+    }
+
+}
+
+
+class PersonFromBehind(
+    size: Int,
+    center: MovingPoint,
+    color: Array<Int>,
+    a: Double,
+    memory: Int = 24_000,
+    lookingToLeft: Boolean
+) : Actoress() {
+    init {
+        val start = getStart(center)
+        val body = addGraph(
+            ForgetfulGraphInR2(size, memory, Oblong(a, 1.8, 1.0), start),
+            arrayOf(color[0] / 30, color[1] / 30, color[2] / 40), color
+        )
+        val eye = addGraph(
+            ForgetfulGraphInR2(size, 6_000, OneOrA(4.5), start),
+            color, toColor("ffffff")
+        )
+
+        val bodyPoint = addMovingPoint(center)
+        val eye1Point = addMovingPoint(MovingPoint(6 * center.mass,
+            DisplacedTrajectory(center.trajectory, -10.0, (if (lookingToLeft) -8.0 else 8.0))
+        ))
+
+        addEdgeAtoP(body, bodyPoint, -1.5)
+        addEdgeAtoP(eye, eye1Point, -1.5)
     }
 
 }
 
 class Bug(
     size: Int,
-    val center: MovingPoint,
+    center: MovingPoint,
     color: Array<Int>,
     val memory: Int
-) : JointGraphsWithRestraints() {
+) : Actoress() {
+    val body: Int
+
     init {
-        val start = Pair(center.trajectory.pos(0.0).first.toInt(), center.trajectory.pos(0.0).second.toInt())
-        val body = addGraph(
+        val start = getStart(center)
+        body = addGraph(
             ForgetfulGraphInR2(
                 size,
                 memory,
@@ -69,17 +109,48 @@ class Bug(
         val eyesPoint =
             addMovingPoint(MovingPoint(6 * center.mass, DisplacedTrajectory(center.trajectory, -9.0, 0.0)))
 
-        addEdgeGtoP(body, bodyPoint, -1.5)
-        addEdgeGtoP(eyes, eyesPoint, -1.5)
+        addEdgeAtoP(body, bodyPoint, -1.5)
+        addEdgeAtoP(eyes, eyesPoint, -1.5)
+    }
+
+    fun explode() {
+        theActors[body]!!.strategy = Oblong(1.0, 17.0, 17.0)
+        theActors[body]!!.memory = memory * 3
+    }
+}
+
+
+class Ball(
+    size: Int,
+    center: MovingPoint,
+    a: Double,
+    color: Array<Int>,
+    memory: Int
+) : Actoress() {
+    val body: Int
+
+    init {
+        val start = getStart(center)
+        body = addGraph(
+            ForgetfulGraphInR2(
+                size,
+                memory,
+                OneOrA(a),
+                start
+            ), arrayOf(color[0] / 10, color[1] / 10, color[2] / 10), color
+        )
+        val bodyPoint = addMovingPoint(center)
+        addEdgeAtoP(body, bodyPoint, -1.0)
     }
 
 }
+
 
 class Tree(
     size: Int,
     bottomLeft: Pair<Double, Double>,
     topRight: Pair<Double, Double>
-) : JointGraphsWithRestraints() {
+) : Actoress() {
     init {
         val trunk = addGraph(
             ForgetfulGraphInR2(
@@ -116,14 +187,14 @@ class Tree(
         val contour = addMovingPoint(
             MovingPoint(2.0, Repetition(oneTrunkContour, 107))
         )
-        addEdgeGtoP(trunk, contour, -2.8)
+        addEdgeAtoP(trunk, contour, -2.8)
 
 
         val center = Pair(topRight.first, topRight.second * 0.5 + bottomLeft.second * 0.5)
         val leavesGraph = addGraph(ForgetfulGraphInR2(size, 280_000, OneOrA(4.0), Pair(center.first.toInt(), center.second.toInt())),
             toColor("206010"), toColor("30f020")
         )
-        var leaves = mutableListOf<Trajectory>()
+        val leaves = mutableListOf<Trajectory>()
         val length = 0.40 * sqrt((topRight.first - bottomLeft.first).pow(2) + (topRight.second - bottomLeft.second).pow(2))
         for (i in 2 until 11) {
             val end = Pair(center.first + length * cos(i.toDouble() / 6 * PI), center.second + length * sin(i.toDouble() / 6 * PI))
@@ -133,7 +204,7 @@ class Tree(
             Repetition(Composition((1 until 9).map { it -> it.toDouble() / 9}, leaves), 27)
         ))
 
-        addEdgeGtoP(leavesGraph, leavesTrajectory, -2.0)
+        addEdgeAtoP(leavesGraph, leavesTrajectory, -2.0)
 
     }
 }

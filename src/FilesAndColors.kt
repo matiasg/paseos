@@ -16,7 +16,7 @@ fun interpolate(col0: Array<Int>, col1: Array<Int>, visits: Int, maxVisits: Int)
 
 class GCMV(val graph: GraphInR2, val col1: Array<Int>, val col2: Array<Int>, val maxVal: Int)
 
-fun dumpPng(collections: List<JointGraphs>, size: Int, file: FileOutputStream) {
+fun dumpPng(collections: List<FilmedObject>, size: Int, file: FileOutputStream) {
     /*
     TODO: Poner aca un array con toda la info y hacer
     for collection

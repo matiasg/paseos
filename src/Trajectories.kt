@@ -10,11 +10,8 @@ interface Trajectory {
 }
 
 
-class FixedTrajectory(
-    x: Int,
-    y: Int
-) : Trajectory {
-    private val pos_ = Pair(x.toDouble(), y.toDouble())
+class FixedTrajectory(x: Double, y: Double) : Trajectory {
+    private val pos_ = Pair(x, y)
 
     override fun pos(t: Double): Pair<Double, Double> = pos_
 }

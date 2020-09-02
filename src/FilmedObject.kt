@@ -1,9 +1,8 @@
-import java.io.File
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 
-interface JointGraphs {
+interface FilmedObject {
     fun step()
     fun update(t: Double)
     fun getGraphs(): Map<Int, ForgetfulGraphInR2>
@@ -13,7 +12,7 @@ interface JointGraphs {
 class Edge(val node1: Int, val node2: Int, val k: Double)
 
 
-open class JointGraphsWithRestraintsAndChangingG() : JointGraphsWithRestraints() {
+open class FilmedObjectWithChangingG() : Actoress() {
     val Gperiods = 2.0
 
     override fun updateG(t: Double) {
@@ -22,13 +21,12 @@ open class JointGraphsWithRestraintsAndChangingG() : JointGraphsWithRestraints()
 
 }
 
-open class JointGraphsWithRestraints(
-) : JointGraphs {
+open class Actoress() : FilmedObject {
 
-    val theGraphs = mutableMapOf<Int, ForgetfulGraphInR2>()
+    val theActors = mutableMapOf<Int, ForgetfulGraphInR2>()
     val movingPoints: MutableMap<Int, MovingPoint> = mutableMapOf()
-    val graphsToGraphs: MutableList<Edge> = mutableListOf()
-    val graphsToPoints: MutableList<Edge> = mutableListOf()
+    val actorsToActors: MutableList<Edge> = mutableListOf()
+    val actorsToPoints: MutableList<Edge> = mutableListOf()
     val theColors: MutableMap<Int, Pair<Array<Int>, Array<Int>>> = mutableMapOf()
 
     // TODO: reify this
@@ -37,8 +35,8 @@ open class JointGraphsWithRestraints(
     val minDist: Double = 6.0
 
     fun addGraph(graph: ForgetfulGraphInR2, col1: Array<Int>, col2: Array<Int>): Int {
-        val id = theGraphs.size
-        theGraphs.put(id, graph)
+        val id = theActors.size
+        theActors.put(id, graph)
         theColors.put(id, Pair(col1, col2))
         return id
     }
@@ -49,16 +47,16 @@ open class JointGraphsWithRestraints(
         return id
     }
 
-    fun addEdgeGtoG(id1: Int, id2: Int, k: Double) {
-        graphsToGraphs.add(Edge(id1, id2, k))
+    fun addEdgeAtoA(id1: Int, id2: Int, k: Double) {
+        actorsToActors.add(Edge(id1, id2, k))
     }
 
-    fun addEdgeGtoP(idg: Int, idp: Int, k: Double) {
-        graphsToPoints.add(Edge(idg, idp, k))
+    fun addEdgeAtoP(idg: Int, idp: Int, k: Double) {
+        actorsToPoints.add(Edge(idg, idp, k))
     }
 
     fun changeStrategy(graphId: Int, newStrategy: StrategyWithAim) {
-        theGraphs[graphId]?.strategy = newStrategy
+        theActors[graphId]?.strategy = newStrategy
     }
 
     private  fun getDirection(ownPos: Pair<Double, Double>, otherCenter: Pair<Double, Double>, factor: Double): Pair<Double, Double> {
@@ -74,7 +72,7 @@ open class JointGraphsWithRestraints(
     }
 
     override fun getGraphs(): Map<Int, ForgetfulGraphInR2> {
-        return theGraphs
+        return theActors
     }
 
     override fun getColors(): Map<Int, Pair<Array<Int>, Array<Int>>> {
@@ -82,51 +80,45 @@ open class JointGraphsWithRestraints(
     }
 
     fun changeAim(t: Double) {
-        val aims: Array<Pair<Double, Double>> = Array(theGraphs.size, { Pair(0.0, 0.0) })
-        val positions: Array<Pair<Double, Double>> = Array(theGraphs.size, { id -> Pair(theGraphs[id]!!.pos.first.toDouble(), theGraphs[id]!!.pos.second.toDouble()) })
+        val aims: Array<Pair<Double, Double>> = Array(theActors.size, { Pair(0.0, 0.0) })
+        val positions: Array<Pair<Double, Double>> = Array(theActors.size, { id -> Pair(theActors[id]!!.pos.first.toDouble(), theActors[id]!!.pos.second.toDouble()) })
 
-        for (edge in graphsToGraphs) {
+        for (edge in actorsToActors) {
             val edgeAim = getDirection(positions[edge.node1], positions[edge.node2], edge.k)
             aims[edge.node1] = Pair(aims[edge.node1].first + edgeAim.first , aims[edge.node1].second + edgeAim.second)
         }
 
-        for (edge in graphsToPoints) {
+        for (edge in actorsToPoints) {
             val point = movingPoints[edge.node2]!!
             val edgeAim = getDirection(positions[edge.node1], point.trajectory.pos(t), edge.k * point.mass)
             aims[edge.node1] = Pair(aims[edge.node1].first + edgeAim.first , aims[edge.node1].second + edgeAim.second)
         }
 
-        for (id in (0..theGraphs.size-1)) {
-            theGraphs[id]!!.strategy.setAim(GraphInR2.toDirWeights(aims[id]))
+        for (id in 0 until theActors.size) {
+            theActors[id]!!.strategy.setAim(GraphInR2.toDirWeights(aims[id]))
         }
     }
 
     open fun updateG(t: Double) {}
 
     override fun step() {
-        for (g in theGraphs.values) {
+        for (g in theActors.values) {
             g.move()
         }
     }
 
 }
 
-class DisjointJointGraphs(
+class Take(
     val size: Int,
-    val label: String,
     val totalSteps: Int,
-    val stepsForPics: Int,
     val stepsForaAimChange: Int
 ) {
-    val graphsCollections = mutableListOf<JointGraphs>()
+    val graphsCollections = mutableListOf<FilmedObject>()
     var steps = 0
     val changes = mutableListOf<GraphChange>()
 
-    init {
-        directory().mkdir()
-    }
-
-    fun addCollection(c: JointGraphs) {
+    fun addObject(c: FilmedObject) {
         graphsCollections.add((c))
     }
 
@@ -134,31 +126,12 @@ class DisjointJointGraphs(
         changes.add(ch)
     }
 
-    fun directory(): File {
-        val name = "graphs.$size.$label"
-        return File(name)
-    }
-
-    fun pngFile(pic: Int): File {
-        val name = "graph.$size.$label.%04d.png".format(pic)
-        return File(directory(), name)
-    }
 
     fun step() {
         for (collection in graphsCollections) {
             collection.step()
         }
         steps++
-
-        val timeForPicture = steps % stepsForPics == 0
-        if (timeForPicture) {
-            val pic = steps / stepsForPics - 1
-            val pngFile = pngFile(pic)
-            println("going for pic $pngFile")
-            pngFile.outputStream().use {
-                dumpPng(graphsCollections, size, it)
-            }
-        }
 
         val timeForAimChange = steps % stepsForaAimChange == 0
         if (timeForAimChange) {
@@ -176,15 +149,15 @@ class DisjointJointGraphs(
 
 class GraphChange(
     time: Double,
-    val totalSteps: Int,
-    val graph: GraphInR2,
-    val change: (GraphInR2) -> Unit
+    totalSteps: Int,
+    val graphs: FilmedObject,
+    val change: (FilmedObject) -> Unit
 ) {
     val stepToChange = (time * totalSteps).toInt()
 
     fun doChange(step: Int) {
         if (step == stepToChange) {
-            change(graph)
+            change(graphs)
         }
     }
 }
